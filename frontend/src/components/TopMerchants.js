@@ -9,7 +9,7 @@ const merchants = [
 const maxAmount = Math.max(...merchants.map((m) => m.amount));
 
 export default function TopMerchants() {
-  return (
+    return (
     <div className="bg-[#0c1017] border rounded-md p-4">
       <p className="text-[10px] text-gray-600 uppercase tracking-[0.15em] font-medium mb-4">Top Merchants</p>
 

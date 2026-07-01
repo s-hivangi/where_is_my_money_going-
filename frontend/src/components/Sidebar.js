@@ -36,13 +36,13 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-[200px] min-h-screen bg-[#0c1017] border-r flex flex-col">
+    <aside className="w-50 min-h-screen bg-[#0c1017] border-r flex flex-col">
       <div className="px-5 pt-6 pb-5 border-b">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-[4px] bg-blue-600 flex items-center justify-center text-white text-[11px] font-bold tracking-tight">
+          <div className="w-7 h-7 rounded-sm bg-blue-600 flex items-center justify-center text-white text-[11px] font-bold tracking-tight">
             F
           </div>
-          <span className="font-[family-name:var(--font-heading)] text-[17px] text-white tracking-tight">
+          <span className="font-(family-name:--font-heading) text-[17px] text-white tracking-tight">
             FinSight
           </span>
         </div>
@@ -57,10 +57,10 @@ export default function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 text-[13px] rounded-[4px] transition-colors duration-150 ${
+                className={`flex items-center gap-3 px-3 py-2 text-[13px] rounded-sm transition-colors duration-150 ${
                   active
                     ? "bg-blue-600/10 text-blue-400 border-l-2 border-l-blue-500"
-                    : "text-gray-500 hover:text-gray-300 hover:bg-white/[0.02]"
+                    : "text-gray-500 hover:text-gray-300 hover:bg-white/2"
                 }`}
               >
                 {item.icon}
@@ -72,10 +72,10 @@ export default function Sidebar() {
       </nav>
 
       <div className="px-3 pb-5">
-        <div className="border rounded-[4px] p-3 bg-[#0a0e15]">
+        <div className="border rounded-sm p-3 bg-[#0a0e15]">
           <p className="text-[9px] text-gray-600 uppercase tracking-wider font-medium mb-2">Statements</p>
-          <div className="w-full bg-[#1a2332] rounded-sm h-[3px] mb-2">
-            <div className="h-[3px] rounded-sm bg-blue-600 w-[35%]" />
+          <div className="w-full bg-[#1a2332] rounded-sm h-0.75 mb-2">
+            <div className="h-0.75 rounded-sm bg-blue-600 w-[35%]" />
           </div>
           <p className="text-[10px] text-gray-500">3 of 10 uploaded</p>
         </div>

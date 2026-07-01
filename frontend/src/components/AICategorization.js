@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 const data = [
@@ -15,7 +16,7 @@ const totalCategorized = data.reduce((s, d) => s + d.amount, 0);
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload?.length) {
     return (
-      <div className="bg-[#111824] border rounded-[4px] px-2.5 py-1.5 text-[11px]">
+      <div className="bg-[#111824] border rounded-sm px-2.5 py-1.5 text-[11px]">
         <p className="text-gray-300">{payload[0].payload.name}</p>
         <p className="text-gray-500">₹{payload[0].value.toLocaleString()}</p>
       </div>
@@ -25,21 +26,31 @@ const CustomTooltip = ({ active, payload }) => {
 };
 
 export default function AICategorization() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <div className="bg-[#0c1017] border rounded-md p-4 h-73 animate-pulse" />;
+  }
+
   return (
-    <div className="bg-[#0c1017] border rounded-[6px] p-4">
+    <div className="bg-[#0c1017] border rounded-md p-4">
       <div className="flex items-center justify-between mb-4">
         <div>
           <div className="flex items-center gap-2 mb-0.5">
             <p className="text-[10px] text-gray-600 uppercase tracking-[0.15em] font-medium">AI-Categorized Spending</p>
-            <span className="text-[8px] text-blue-400 border border-blue-500/30 px-1 py-px rounded-[2px] font-medium">LLM</span>
+            <span className="text-[8px] text-blue-400 border border-blue-500/30 px-1 py-px rounded-xs font-medium">LLM</span>
           </div>
           <p className="text-[11px] text-gray-600">Auto-classified from raw bank statement text</p>
-        </div>
+        </div> 
         <p className="text-[11px] text-gray-500 tabular-nums">₹{totalCategorized.toLocaleString()} total</p>
       </div>
 
-      <div className="h-[200px]">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="h-50">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
           <BarChart data={data} layout="vertical" margin={{ left: 0, right: 12, top: 0, bottom: 0 }}>
             <XAxis
               type="number"
