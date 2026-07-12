@@ -1,7 +1,7 @@
-import { Playfair_Display, DM_Sans } from "next/font/google";
+﻿import { Playfair_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
-import Sidebar from "@/components/Sidebar";
-import Navbar from "@/components/Navbar";
+import Sidebar from "@/app/components/Sidebar";
+import Navbar from "@/app/components/Navbar";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],

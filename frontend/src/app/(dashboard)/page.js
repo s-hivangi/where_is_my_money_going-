@@ -1,9 +1,9 @@
-import SpendingBreakdown from "@/components/SpendingBreakdown";
-import AICategorization from "@/components/AICategorization";
-import SavingsRate from "@/components/SavingsRate";
-import DebitChart from "@/components/DebitChart";
-import AnomalyAlerts from "@/components/AnomalyAlerts";
-import TopMerchants from "@/components/TopMerchants";
+import SpendingBreakdown from "@/app/components/SpendingBreakdown";
+import AICategorization from "@/app/components/AICategorization";
+import SavingsRate from "@/app/components/SavingsRate";
+import DebitChart from "@/app/components/DebitChart";
+import AnomalyAlerts from "@/app/components/AnomalyAlerts";
+import TopMerchants from "@/app/components/TopMerchants";
 
 export default function Home() {
   return (
