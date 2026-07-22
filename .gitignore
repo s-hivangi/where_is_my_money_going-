@@ -16,3 +16,26 @@ dist/
 
 # Logs
 *.log
+
+# environment variables
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# data files
+backend/data/archive/personal_transactions_dashboard.csv
+backend/data/archive/column_description.md
+backend/data/archive/personal_transactions_dashboard_ready (2).xlsx
+
+# python cache
+backend/__pycache__/
+backend/**/__pycache__/
+
+# node modules
+frontend/node_modules/
+
+# next.js build
+frontend/.next/
+
+# prisma generated
+frontend/src/generated/
