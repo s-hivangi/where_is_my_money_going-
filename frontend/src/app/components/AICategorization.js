@@ -1,77 +1,56 @@
 "use client";
 import { useEffect, useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-
-const data = [
-  { name: "Rent", amount: 15000 },
-  { name: "Food & Dining", amount: 8700 },
-  { name: "Shopping", amount: 6200 },
-  { name: "Travelling", amount: 5400 },
-  { name: "Utilities", amount: 3200 },
-  { name: "Gaming", amount: 1800 },
-];
-
-const totalCategorized = data.reduce((s, d) => s + d.amount, 0);
-
-const CustomTooltip = ({ active, payload }) => {
-  if (active && payload?.length) {
-    return (
-      <div className="bg-[#111824] border rounded-sm px-2.5 py-1.5 text-[11px]">
-        <p className="text-gray-300">{payload[0].payload.name}</p>
-        <p className="text-gray-500">₹{payload[0].value.toLocaleString()}</p>
-      </div>
-    );
-  }
-  return null;
-};
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 export default function AICategorization() {
-  const [mounted, setMounted] = useState(false);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setMounted(true);
+    fetch("/api/analytics/spending-by-category")
+      .then((res) => res.json())
+      .then((json) => {
+        setData(json.data);
+        setLoading(false);
+      });
   }, []);
 
-  if (!mounted) {
-    return <div className="bg-[#0c1017] border rounded-md p-4 h-73 animate-pulse" />;
-  }
+  if (loading) return (
+    <div className="bg-[#12121a] rounded-xl border border-white/10 p-5">
+      <h2 className="text-sm font-semibold text-white/70 mb-4">AI-Powered Categorization</h2>
+      <div className="h-64 flex items-center justify-center text-white/20 text-sm">Loading...</div>
+    </div>
+  );
 
   return (
-    <div className="bg-[#0c1017] border rounded-md p-4">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <div className="flex items-center gap-2 mb-0.5">
-            <p className="text-[10px] text-gray-600 uppercase tracking-[0.15em] font-medium">AI-Categorized Spending</p>
-            <span className="text-[8px] text-blue-400 border border-blue-500/30 px-1 py-px rounded-xs font-medium">LLM</span>
-          </div>
-          <p className="text-[11px] text-gray-600">Auto-classified from raw bank statement text</p>
-        </div> 
-        <p className="text-[11px] text-gray-500 tabular-nums">₹{totalCategorized.toLocaleString()} total</p>
+    <div className="bg-[#12121a] rounded-xl border border-white/10 p-5">
+      <div className="flex items-center gap-2 mb-4">
+        <h2 className="text-sm font-semibold text-white/70">AI-Powered Categorization</h2>
+        <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">LLM</span>
       </div>
-
-      <div className="h-50">
-        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-          <BarChart data={data} layout="vertical" margin={{ left: 0, right: 12, top: 0, bottom: 0 }}>
-            <XAxis
-              type="number"
-              tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
-              tick={{ fill: "#4b5563", fontSize: 10 }}
-              axisLine={{ stroke: "#1a2332" }}
-              tickLine={false}
-            />
-            <YAxis
-              type="category"
-              dataKey="name"
-              tick={{ fill: "#6b7280", fontSize: 11 }}
-              axisLine={false}
-              tickLine={false}
-              width={85}
-            />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.01)" }} />
-            <Bar dataKey="amount" radius={[0, 2, 2, 0]} barSize={16} fill="#2563eb" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      <ResponsiveContainer width="100%" height={280}>
+        <BarChart data={data} layout="vertical" margin={{ left: 80 }}>
+          <XAxis type="number" hide />
+          <YAxis
+            type="category"
+            dataKey="category"
+            tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 12 }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <Tooltip
+            formatter={(value) => [`$${value.toLocaleString()}`, "Total"]}
+            contentStyle={{ background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px" }}
+            labelStyle={{ color: "#fff" }}
+          />
+          <Bar dataKey="total" radius={[0, 4, 4, 0]}>
+            {data.map((entry, index) => (
+              <Cell key={index} fill={entry.color} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 }
+

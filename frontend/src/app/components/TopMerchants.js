@@ -1,39 +1,49 @@
-const merchants = [
-  { name: "Amazon", amount: 5800, txns: 12, change: "+18%" },
-  { name: "Swiggy", amount: 4200, txns: 28, change: "+7%" },
-  { name: "Uber", amount: 3200, txns: 15, change: "-12%" },
-  { name: "BigBasket", amount: 2800, txns: 8, change: "+3%" },
-  { name: "Starbucks", amount: 1900, txns: 9, change: "+24%" },
-];
-
-const maxAmount = Math.max(...merchants.map((m) => m.amount));
+"use client";
+import { useEffect, useState } from "react";
 
 export default function TopMerchants() {
-    return (
-    <div className="bg-[#0c1017] border rounded-md p-4">
-      <p className="text-[10px] text-gray-600 uppercase tracking-[0.15em] font-medium mb-4">Top Merchants</p>
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-      <div className="flex flex-col">
-        {merchants.map((m, i) => (
-          <div
-            key={m.name}
-            className="flex items-center gap-3 py-2.5 border-b last:border-0 hover:bg-white/1 transition-colors"
-          >
-            <span className="text-[10px] text-gray-700 w-3 text-right tabular-nums font-mono">{i + 1}</span>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[12px] text-gray-300">{m.name}</span>
-                <span className="text-[12px] text-white tabular-nums font-medium">₹{m.amount.toLocaleString()}</span>
+  useEffect(() => {
+    fetch("/api/analytics/top-merchants")
+      .then((res) => res.json())
+      .then((json) => {
+        setData(json.data);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return (
+    <div className="bg-[#12121a] rounded-xl border border-white/10 p-5">
+      <h2 className="text-sm font-semibold text-white/70 mb-4">Top Merchants</h2>
+      <div className="h-48 flex items-center justify-center text-white/20 text-sm">Loading...</div>
+    </div>
+  );
+
+  const max = data[0]?.total || 1;
+
+  return (
+    <div className="bg-[#12121a] rounded-xl border border-white/10 p-5">
+      <h2 className="text-sm font-semibold text-white/70 mb-4">Top Merchants</h2>
+      <div className="flex flex-col gap-3">
+        {data.map((merchant, index) => (
+          <div key={index}>
+            <div className="flex justify-between items-center mb-1">
+              <div className="flex items-center gap-2">
+                <span className="text-white/30 text-xs w-4">{index + 1}</span>
+                <span className="text-white text-sm">{merchant.merchant}</span>
               </div>
-              <div className="w-full bg-[#1a2332] h-0.5">
-                <div className="h-0.5 bg-blue-600" style={{ width: `${(m.amount / maxAmount) * 100}%` }} />
+              <div className="text-right">
+                <span className="text-white text-sm font-medium">${merchant.total.toLocaleString()}</span>
+                <span className="text-white/30 text-xs ml-2">{merchant.count} txns</span>
               </div>
-              <div className="flex items-center justify-between mt-1">
-                <span className="text-[9px] text-gray-600">{m.txns} txns</span>
-                <span className={`text-[9px] tabular-nums ${m.change.startsWith("+") ? "text-red-500/60" : "text-emerald-500/60"}`}>
-                  {m.change} vs prev
-                </span>
-              </div>
+            </div>
+            <div className="w-full bg-white/10 rounded-full h-1">
+              <div
+                className="h-1 rounded-full bg-purple-500"
+                style={{ width: `${(merchant.total / max) * 100}%` }}
+              />
             </div>
           </div>
         ))}

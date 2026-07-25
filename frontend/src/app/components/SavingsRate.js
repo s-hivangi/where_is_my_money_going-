@@ -1,49 +1,54 @@
 "use client";
-
-const savings = 18;
-const spending = 82;
-const income = 85000;
-const spent = 69700;
-const saved = income - spent;
+import { useEffect, useState } from "react";
 
 export default function SavingsRate() {
-  const radius = 60;
-  const circumference = Math.PI * radius;
-  const savingsArc = (savings / 100) * circumference;
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/analytics/savings-rate")
+      .then((res) => res.json())
+      .then((json) => {
+        setData(json.data);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return (
+    <div className="bg-[#12121a] rounded-xl border border-white/10 p-5">
+      <h2 className="text-sm font-semibold text-white/70 mb-4">Savings Rate</h2>
+      <div className="h-48 flex items-center justify-center text-white/20 text-sm">Loading...</div>
+    </div>
+  );
+
+  const rate = data?.savings_rate || 0;
+  const spent = data?.total_spending || 0;
+  const income = data?.total_income || 0;
 
   return (
-    <div className="bg-[#0c1017] border rounded-md p-4">
-      <p className="text-[10px] text-gray-600 uppercase tracking-[0.15em] font-medium mb-4">Savings Rate</p>
-
-      <div className="flex justify-center mb-4">
-        <svg width="160" height="95" viewBox="0 0 160 95">
-          <path d="M 15 85 A 65 65 0 0 1 145 85" fill="none" stroke="#1a2332" strokeWidth="10" strokeLinecap="butt" />
-          <path d="M 15 85 A 65 65 0 0 1 145 85" fill="none" stroke="#ef4444" strokeWidth="10" strokeLinecap="butt" opacity="0.25" />
-          <path
-            d="M 15 85 A 65 65 0 0 1 145 85"
-            fill="none"
-            stroke="#06d6a0"
-            strokeWidth="10"
-            strokeLinecap="butt"
-            strokeDasharray={`${savingsArc} ${circumference}`}
-          />
-          <text x="80" y="62" textAnchor="middle" fill="white" fontSize="22" fontWeight="600">
-            {savings}%
-          </text>
-          <text x="80" y="80" textAnchor="middle" fill="#6b7280" fontSize="9">
-            saved this month
-          </text>
-        </svg>
+    <div className="bg-[#12121a] rounded-xl border border-white/10 p-5">
+      <h2 className="text-sm font-semibold text-white/70 mb-4">Savings vs Spending Rate</h2>
+      
+      <div className="flex flex-col items-center justify-center py-4">
+        <div className="text-5xl font-bold text-white">{rate.toFixed(1)}%</div>
+        <div className="text-white/40 text-sm mt-2">saved this month</div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <div className="border rounded-md p-2.5">
-          <p className="text-[9px] text-gray-600 uppercase tracking-wider mb-0.5">Saved</p>
-          <p className="text-[15px] text-emerald-400 font-(family-name:--font-heading) tabular-nums">₹{(saved / 1000).toFixed(1)}k</p>
+      <div className="w-full bg-white/10 rounded-full h-2 mt-4">
+        <div
+          className="h-2 rounded-full bg-green-500"
+          style={{ width: `${Math.min(rate, 100)}%` }}
+        />
+      </div>
+
+      <div className="flex justify-between mt-4">
+        <div>
+          <div className="text-xs text-white/40">Income</div>
+          <div className="text-sm font-medium text-green-400">${income.toLocaleString()}</div>
         </div>
-        <div className="border rounded-md p-2.5">
-          <p className="text-[9px] text-gray-600 uppercase tracking-wider mb-0.5">Spent</p>
-          <p className="text-[15px] text-red-400 font-(family-name:--font-heading) tabular-nums">₹{(spent / 1000).toFixed(1)}k</p>
+        <div className="text-right">
+          <div className="text-xs text-white/40">Spent</div>
+          <div className="text-sm font-medium text-red-400">${spent.toLocaleString()}</div>
         </div>
       </div>
     </div>

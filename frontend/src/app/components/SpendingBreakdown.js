@@ -1,83 +1,55 @@
 "use client";
 import { useEffect, useState } from "react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-
-const data = [
-  { name: "Uber", value: 3200, color: "#2563eb" },
-  { name: "Amazon", value: 5800, color: "#06d6a0" },
-  { name: "Starbucks", value: 1900, color: "#8b5cf6" },
-  { name: "Spotify", value: 799, color: "#f59e0b" },
-  { name: "Netflix", value: 649, color: "#ef4444" },
-  { name: "Swiggy", value: 4200, color: "#06b6d4" },
-];
-
-const total = data.reduce((s, d) => s + d.value, 0);
-
-const CustomTooltip = ({ active, payload }) => {
-  if (active && payload?.length) {
-    const d = payload[0].payload;
-    return (
-      <div className="bg-[#111824] border rounded-sm px-2.5 py-1.5 text-[11px]">
-        <p className="text-gray-300 font-medium">{d.name}</p>
-        <p className="text-gray-500">₹{d.value.toLocaleString()} · {((d.value / total) * 100).toFixed(1)}%</p>
-      </div>
-    );
-  }
-  return null;
-};
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 export default function SpendingBreakdown() {
-  const [mounted, setMounted] = useState(false);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setMounted(true);
+    fetch("/api/analytics/spending-by-category")
+      .then((res) => res.json())
+      .then((json) => {
+        setData(json.data);
+        setLoading(false);
+      });
   }, []);
 
-  if (!mounted) {
-    return <div className="bg-[#0c1017] border rounded-md p-4 h-73 animate-pulse" />;
-  }
+  if (loading) return (
+    <div className="bg-[#12121a] rounded-xl border border-white/10 p-5">
+      <h2 className="text-sm font-semibold text-white/70 mb-4">App Spending Breakdown</h2>
+      <div className="h-48 flex items-center justify-center text-white/20 text-sm">Loading...</div>
+    </div>
+  );
 
   return (
-    <div className="bg-[#0c1017] border rounded-md p-4">
-      <p className="text-[10px] text-gray-600 uppercase tracking-[0.15em] font-medium mb-3">By App</p>
-
-      <div className="relative h-45">
-        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={50}
-              outerRadius={75}
-              paddingAngle={2}
-              dataKey="value"
-              strokeWidth={0}
-            >
-              {data.map((entry, i) => (
-                <Cell key={i} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip content={<CustomTooltip />} />
-          </PieChart>
-        </ResponsiveContainer>
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-[11px] text-gray-600">Total</span>
-          <span className="text-[18px] font-(family-name:--font-heading) text-white tracking-tight">₹{(total / 1000).toFixed(1)}k</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 mt-3 pt-3 border-t">
-        {data.map((d) => (
-          <div key={d.name} className="flex items-center justify-between text-[10px]">
-            <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-[1px] shrink-0" style={{ background: d.color }} />
-              <span className="text-gray-500">{d.name}</span>
-            </div>
-            <span className="text-gray-600 tabular-nums">{((d.value / total) * 100).toFixed(0)}%</span>
-          </div>
-        ))}
-      </div>
+    <div className="bg-[#12121a] rounded-xl border border-white/10 p-5">
+      <h2 className="text-sm font-semibold text-white/70 mb-4">Spending Breakdown</h2>
+      <ResponsiveContainer width="100%" height={220}>
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="total"
+            nameKey="category"
+            cx="50%"
+            cy="50%"
+            innerRadius={60}
+            outerRadius={90}
+          >
+            {data.map((entry, index) => (
+              <Cell key={index} fill={entry.color} />
+            ))}
+          </Pie>
+          <Tooltip
+            formatter={(value) => [`$${value.toLocaleString()}`, "Total"]}
+            contentStyle={{ background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px" }}
+            labelStyle={{ color: "#fff" }}
+          />
+          <Legend
+            formatter={(value) => <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "12px" }}>{value}</span>}
+          />
+        </PieChart>
+      </ResponsiveContainer>
     </div>
   );
 }
