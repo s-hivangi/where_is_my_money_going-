@@ -39,3 +39,6 @@ frontend/.next/
 
 # prisma generated
 frontend/src/generated/
+
+#file upload
+frontend/public/uploads/
