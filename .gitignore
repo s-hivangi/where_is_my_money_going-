@@ -42,3 +42,7 @@ frontend/src/generated/
 
 #file upload
 frontend/public/uploads/
+
+#venv
+venv/
+
