@@ -7,7 +7,7 @@ from services.llm.extractor import parse_ocr_to_transactions
 router = APIRouter()
 
 @router.post("/")
-async def upload_and_process_statement(file: UploadFile = File(...)):
+async def process_statement(file: UploadFile = File(...)):
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file uploaded")
         
@@ -16,11 +16,11 @@ async def upload_and_process_statement(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, buffer)
         
     try:
-        # Step 1: Run OCR
-        markdown_text = extract_text_with_mistral(temp_file_path)
+        # Step 1 — OCR
+        extracted_text = extract_text_with_mistral(temp_file_path)
         
-        # Step 2: Run LLM parsing on the OCR output
-        transactions = parse_ocr_to_transactions(markdown_text)
+        # Step 2 — LLM Parse
+        transactions = parse_ocr_to_transactions(extracted_text)
         
         return {
             "status": "success",
@@ -33,4 +33,3 @@ async def upload_and_process_statement(file: UploadFile = File(...)):
     finally:
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
-            
