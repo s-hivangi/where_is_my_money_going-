@@ -1,5 +1,3 @@
-import os
-import shutil
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from services.ocr.extractor import extract_text_with_mistral
 from services.llm.extractor import parse_ocr_to_transactions
@@ -10,14 +8,13 @@ router = APIRouter()
 async def process_statement(file: UploadFile = File(...)):
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file uploaded")
-        
-    temp_file_path = f"temp_{file.filename}"
-    with open(temp_file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-        
+
     try:
+        # Read raw binary data directly into RAM (no disk writing!)
+        contents = await file.read()
+        
         # Step 1 — OCR
-        extracted_text = extract_text_with_mistral(temp_file_path)
+        extracted_text = extract_text_with_mistral(contents, file.filename)
         
         # Step 2 — LLM Parse
         transactions = parse_ocr_to_transactions(extracted_text)
@@ -30,6 +27,4 @@ async def process_statement(file: UploadFile = File(...)):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if os.path.exists(temp_file_path):
-            os.remove(temp_file_path)
+    
