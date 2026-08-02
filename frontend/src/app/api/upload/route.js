@@ -1,14 +1,78 @@
-﻿import { writeFile, mkdir } from 'fs/promises'
+import { writeFile, mkdir } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
+import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
 import { cookies } from 'next/headers'
 
+const PYTHON_API_URL = process.env.PYTHON_API_URL || process.env.BACKEND_URL || 'http://127.0.0.1:8000'
+
+function normalizeType(transaction) {
+  const type = String(transaction.type || '').toUpperCase()
+  if (type === 'CREDIT' || Number(transaction.amount) > 0) return 'credit'
+  return 'debit'
+}
+
+function normalizeAmount(transaction) {
+  return Math.abs(Number(transaction.amount || 0))
+}
+
+function getTransactionDate(transaction) {
+  const date = new Date(transaction.date)
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`Invalid transaction date: ${transaction.date}`)
+  }
+  return date
+}
+
+function buildTransactionHash(userId, transaction) {
+  const hashInput = [
+    userId,
+    transaction.date,
+    transaction.description || '',
+    transaction.merchant || '',
+    transaction.amount,
+    transaction.type || ''
+  ].join('|')
+
+  return crypto.createHash('sha256').update(hashInput).digest('hex')
+}
+
+async function getCategoryId(categoryName) {
+  const name = categoryName || 'Other'
+
+  const category = await prisma.categories.upsert({
+    where: { name },
+    update: {},
+    create: { name }
+  })
+
+  return category.id
+}
+
+async function processWithPython(file, bankName) {
+  const pythonFormData = new FormData()
+  pythonFormData.append('file', file, file.name)
+  pythonFormData.append('bankName', bankName)
+
+  const response = await fetch(`${PYTHON_API_URL.replace(/\/$/, '')}/api/upload/`, {
+    method: 'POST',
+    body: pythonFormData
+  })
+
+  const data = await response.json().catch(() => null)
+
+  if (!response.ok || !data) {
+    throw new Error(data?.detail || data?.error || 'Python upload service failed')
+  }
+
+  return data.transactions || []
+}
+
 export async function POST(request) {
   try {
-    // get logged in user from token
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const token = cookieStore.get('token')?.value
     if (!token) {
       return Response.json({ success: false, error: 'Not authenticated' }, { status: 401 })
@@ -20,8 +84,6 @@ export async function POST(request) {
     }
 
     const userId = payload.userId
-
-    // parse the form data
     const formData = await request.formData()
     const file = formData.get('file')
     const bankName = formData.get('bankName')
@@ -30,23 +92,23 @@ export async function POST(request) {
       return Response.json({ success: false, error: 'No file provided' }, { status: 400 })
     }
 
-    // validate file type
+    if (!bankName) {
+      return Response.json({ success: false, error: 'Bank name is required' }, { status: 400 })
+    }
+
     if (!file.name.endsWith('.pdf')) {
       return Response.json({ success: false, error: 'Only PDF files are accepted' }, { status: 400 })
     }
 
-    // validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       return Response.json({ success: false, error: 'File too large. Max 10MB' }, { status: 400 })
     }
 
-    // create uploads directory if it doesn't exist
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads')
     if (!existsSync(uploadsDir)) {
       await mkdir(uploadsDir, { recursive: true })
     }
 
-    // save file with unique name
     const timestamp = Date.now()
     const fileName = `${userId}_${timestamp}_${file.name.replace(/\s/g, '_')}`
     const filePath = path.join(uploadsDir, fileName)
@@ -56,7 +118,8 @@ export async function POST(request) {
     const buffer = Buffer.from(bytes)
     await writeFile(filePath, buffer)
 
-    // create or find bank account
+    const transactions = await processWithPython(file, bankName)
+
     let bankAccount = await prisma.bank_accounts.findFirst({
       where: { user_id: userId, bank_name: bankName }
     })
@@ -67,7 +130,6 @@ export async function POST(request) {
       })
     }
 
-    // create statement record
     const statement = await prisma.statements.create({
       data: {
         user_id: userId,
@@ -78,13 +140,61 @@ export async function POST(request) {
       }
     })
 
-    return Response.json({
-      success: true,
-      message: 'File uploaded successfully',
-      statementId: statement.id,
-      fileUrl
+    let inserted = 0
+    let skipped = 0
+
+    for (const transaction of transactions) {
+      const hash = buildTransactionHash(userId, transaction)
+      const exists = await prisma.transactions.findUnique({ where: { hash } })
+
+      if (exists) {
+        skipped += 1
+        continue
+      }
+
+      const description = transaction.description || transaction.merchant || 'Transaction'
+      const merchant = transaction.merchant || description
+      const categoryId = await getCategoryId(transaction.category)
+
+      await prisma.transactions.create({
+        data: {
+          user_id: userId,
+          statement_id: statement.id,
+          bank_account_id: bankAccount.id,
+          date: getTransactionDate(transaction),
+          description,
+          merchant,
+          merchant_normalized: merchant.toLowerCase().trim(),
+          amount: normalizeAmount(transaction),
+          type: normalizeType(transaction),
+          category_id: categoryId,
+          confidence: transaction.confidence ?? null,
+          hash,
+          needs_review: false,
+          is_duplicate: false
+        }
+      })
+
+      inserted += 1
+    }
+
+    await prisma.statements.update({
+      where: { id: statement.id },
+      data: {
+        status: 'COMPLETED',
+        total_transactions: inserted + skipped
+      }
     })
 
+    return Response.json({
+      success: true,
+      message: 'Statement processed successfully',
+      statementId: statement.id,
+      fileUrl,
+      inserted,
+      skipped,
+      transactions
+    })
   } catch (error) {
     return Response.json({ success: false, error: error.message }, { status: 500 })
   }

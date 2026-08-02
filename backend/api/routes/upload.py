@@ -1,11 +1,11 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from services.ocr.extractor import extract_text_with_mistral
 from services.llm.extractor import parse_ocr_to_transactions
 
 router = APIRouter()
 
 @router.post("/")
-async def process_statement(file: UploadFile = File(...)):
+async def process_statement(file: UploadFile = File(...), bankName: str | None = Form(None)):
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file uploaded")
 
