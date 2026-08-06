@@ -7,10 +7,10 @@ export default function SpendingBreakdown() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/analytics/spending-by-category")
+    fetch("/api/analytics/spending-by-category", { cache: "no-store" })
       .then((res) => res.json())
       .then((json) => {
-        setData(json.data);
+        setData(json.data || []);
         setLoading(false);
       });
   }, []);
@@ -21,6 +21,15 @@ export default function SpendingBreakdown() {
       <div className="h-48 flex items-center justify-center text-white/20 text-sm">Loading...</div>
     </div>
   );
+
+  if (data.length === 0) {
+    return (
+      <div className="bg-[#12121a] rounded-xl border border-white/10 p-5">
+        <h2 className="text-sm font-semibold text-white/70 mb-4">Spending Breakdown</h2>
+        <div className="h-48 flex items-center justify-center text-white/20 text-sm">No category data yet</div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#12121a] rounded-xl border border-white/10 p-5">
@@ -41,7 +50,7 @@ export default function SpendingBreakdown() {
             ))}
           </Pie>
           <Tooltip
-            formatter={(value) => [`$${value.toLocaleString()}`, "Total"]}
+            formatter={(value) => [`₹${value.toLocaleString()}`, "Total"]}
             contentStyle={{ background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px" }}
             labelStyle={{ color: "#fff" }}
           />

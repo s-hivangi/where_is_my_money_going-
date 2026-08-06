@@ -6,10 +6,10 @@ export default function TopMerchants() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/analytics/top-merchants")
+    fetch("/api/analytics/top-merchants", { cache: "no-store" })
       .then((res) => res.json())
       .then((json) => {
-        setData(json.data);
+        setData(json.data || []);
         setLoading(false);
       });
   }, []);
@@ -23,6 +23,15 @@ export default function TopMerchants() {
 
   const max = data[0]?.total || 1;
 
+  if (data.length === 0) {
+    return (
+      <div className="bg-[#12121a] rounded-xl border border-white/10 p-5">
+        <h2 className="text-sm font-semibold text-white/70 mb-4">Top Merchants</h2>
+        <div className="h-48 flex items-center justify-center text-white/20 text-sm">No merchant data yet</div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-[#12121a] rounded-xl border border-white/10 p-5">
       <h2 className="text-sm font-semibold text-white/70 mb-4">Top Merchants</h2>
@@ -35,7 +44,7 @@ export default function TopMerchants() {
                 <span className="text-white text-sm">{merchant.merchant}</span>
               </div>
               <div className="text-right">
-                <span className="text-white text-sm font-medium">${merchant.total.toLocaleString()}</span>
+                <span className="text-white text-sm font-medium">₹{merchant.total.toLocaleString()}</span>
                 <span className="text-white/30 text-xs ml-2">{merchant.count} txns</span>
               </div>
             </div>

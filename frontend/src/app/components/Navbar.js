@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Navbar() {
   return (
     <div className="flex items-center justify-between px-5 py-2.5 bg-[#0c1017] border-b">
@@ -20,16 +22,16 @@ export default function Navbar() {
           <option value="180">Last 6 Months</option>
           <option value="365">This Year</option>
         </select>
-        <button className="text-[12px] px-3 py-1.5 rounded-sm bg-blue-600 text-white font-medium hover:bg-blue-500 active:bg-blue-700 transition-colors tracking-tight flex items-center gap-1.5 group">
+        <Link href="/upload" className="text-[12px] px-3 py-1.5 rounded-sm bg-blue-600 text-white font-medium hover:bg-blue-500 active:bg-blue-700 transition-colors tracking-tight flex items-center gap-1.5 group">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="group-hover:-translate-y-0.5 transition-transform">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="17 8 12 3 7 8" />
             <line x1="12" y1="3" x2="12" y2="15" />
           </svg>
           Upload
-        </button>
+        </Link>
         <div className="w-px h-5 bg-[#1a2332]" />
-        <div className="flex items-center gap-2.5 cursor-pointer group">
+        <Link href="/account" className="flex items-center gap-2.5 cursor-pointer group">
           <div className="w-7 h-7 rounded-sm bg-[#1a2332] flex items-center justify-center text-[11px] text-gray-400 font-medium group-hover:border-gray-500 border border-transparent transition-colors">
             S
           </div>
@@ -37,7 +39,7 @@ export default function Navbar() {
             <p className="text-[11px] text-gray-300 leading-tight">Shivangi</p>
             <p className="text-[9px] text-gray-600 leading-tight">Personal</p>
           </div>
-        </div>
+        </Link>
       </div>
     </div>
   );

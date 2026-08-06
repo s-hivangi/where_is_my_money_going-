@@ -6,10 +6,10 @@ export default function SavingsRate() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/analytics/savings-rate")
+    fetch("/api/analytics/savings-rate", { cache: "no-store" })
       .then((res) => res.json())
       .then((json) => {
-        setData(json.data);
+        setData(json.data || null);
         setLoading(false);
       });
   }, []);
@@ -24,6 +24,15 @@ export default function SavingsRate() {
   const rate = data?.savings_rate || 0;
   const spent = data?.total_spending || 0;
   const income = data?.total_income || 0;
+
+  if (!data || (income === 0 && spent === 0)) {
+    return (
+      <div className="bg-[#12121a] rounded-xl border border-white/10 p-5">
+        <h2 className="text-sm font-semibold text-white/70 mb-4">Savings vs Spending Rate</h2>
+        <div className="h-48 flex items-center justify-center text-white/20 text-sm">No spending data yet</div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#12121a] rounded-xl border border-white/10 p-5">
@@ -44,11 +53,11 @@ export default function SavingsRate() {
       <div className="flex justify-between mt-4">
         <div>
           <div className="text-xs text-white/40">Income</div>
-          <div className="text-sm font-medium text-green-400">${income.toLocaleString()}</div>
+          <div className="text-sm font-medium text-green-400">₹{income.toLocaleString()}</div>
         </div>
         <div className="text-right">
           <div className="text-xs text-white/40">Spent</div>
-          <div className="text-sm font-medium text-red-400">${spent.toLocaleString()}</div>
+          <div className="text-sm font-medium text-red-400">₹{spent.toLocaleString()}</div>
         </div>
       </div>
     </div>

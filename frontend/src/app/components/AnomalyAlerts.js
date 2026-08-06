@@ -6,10 +6,10 @@ export default function AnomalyAlerts() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/analytics/anomalies")
+    fetch("/api/analytics/anomalies", { cache: "no-store" })
       .then((res) => res.json())
       .then((json) => {
-        setData(json.data);
+        setData(json.data || []);
         setLoading(false);
       });
   }, []);
@@ -44,11 +44,11 @@ export default function AnomalyAlerts() {
                 <div>
                   <div className="text-sm font-medium text-white">{item.merchant}</div>
                   <div className="text-xs text-white/40 mt-0.5">
-                    {item.category} • avg ${parseFloat(item.avg_amount).toFixed(0)} normally
+                    {item.category} • avg ₹{parseFloat(item.avg_amount).toFixed(0)} normally
                   </div>
                 </div>
                 <div className="text-red-400 font-semibold text-sm">
-                  ${item.amount.toLocaleString()}
+                  ₹{item.amount.toLocaleString()}
                 </div>
               </div>
               <div className="text-xs text-red-400/70 mt-2">
