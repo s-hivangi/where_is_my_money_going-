@@ -1,11 +1,16 @@
 ﻿import { prisma } from '@/lib/prisma'
+import { normalizeMerchantName } from '@/lib/merchant'
+import { getCurrentUserId } from '@/lib/current-user'
 
 export async function GET() {
   try {
+    const userId = await getCurrentUserId()
+
     const result = await prisma.$queryRaw`
       SELECT 
         t.date,
         t.merchant,
+        t.description,
         t.amount,
         t.type,
         c.name as category,
@@ -20,9 +25,11 @@ export async function GET() {
           STDDEV(amount) as std_amount
         FROM transactions
         WHERE type = 'debit'
+        AND user_id = ${userId}
         GROUP BY category_id
       ) avg_data ON t.category_id = avg_data.category_id
       WHERE t.type = 'debit'
+      AND t.user_id = ${userId}
       AND t.amount > (avg_data.avg_amount + (2 * avg_data.std_amount))
       ORDER BY t.amount DESC
       LIMIT 5
@@ -30,7 +37,7 @@ export async function GET() {
 
     const data = result.map(row => ({
       date: row.date,
-      merchant: row.merchant,
+      merchant: normalizeMerchantName(row.description || row.merchant),
       amount: parseFloat(row.amount),
       type: row.type,
       category: row.category,

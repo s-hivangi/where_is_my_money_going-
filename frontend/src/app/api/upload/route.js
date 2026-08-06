@@ -5,6 +5,7 @@ import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
 import { cookies } from 'next/headers'
+import { normalizeMerchantKey, normalizeMerchantName } from '@/lib/merchant'
 
 const PYTHON_API_URL = process.env.PYTHON_API_URL || process.env.BACKEND_URL || 'http://127.0.0.1:8000'
 
@@ -40,7 +41,7 @@ function buildTransactionHash(userId, transaction) {
 }
 
 async function getCategoryId(categoryName) {
-  const name = categoryName || 'Other'
+  const name = String(categoryName || 'Other').trim()
 
   const category = await prisma.categories.upsert({
     where: { name },
@@ -157,7 +158,10 @@ export async function POST(request) {
       }
 
       const description = transaction.description || transaction.merchant || 'Transaction'
-      const merchant = transaction.merchant || description
+      const merchantSource = transaction.merchant && transaction.merchant.replace(/[^A-Za-z]/g, '').length >= 3
+        ? transaction.merchant
+        : description
+      const merchant = normalizeMerchantName(merchantSource)
       const categoryId = await getCategoryId(transaction.category)
 
       await prisma.transactions.create({
@@ -166,9 +170,9 @@ export async function POST(request) {
           statement_id: statement.id,
           bank_account_id: bankAccount.id,
           date: getTransactionDate(transaction),
-          description,
+          description: String(description).trim(),
           merchant,
-          merchant_normalized: merchant.toLowerCase().trim(),
+          merchant_normalized: normalizeMerchantKey(merchant),
           amount: normalizeAmount(transaction),
           type: normalizeType(transaction),
           category_id: categoryId,

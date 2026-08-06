@@ -1,13 +1,17 @@
 ﻿import { prisma } from '@/lib/prisma'
+import { getCurrentUserId } from '@/lib/current-user'
 
 export async function GET() {
   try {
+    const userId = await getCurrentUserId()
+
     const result = await prisma.$queryRaw`
       SELECT 
         TO_CHAR(date, 'YYYY-MM') as month,
         SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END) as income,
         SUM(CASE WHEN type = 'debit' THEN amount ELSE 0 END) as spending
       FROM transactions
+      WHERE user_id = ${userId}
       GROUP BY TO_CHAR(date, 'YYYY-MM')
       ORDER BY month ASC
     `

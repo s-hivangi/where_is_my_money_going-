@@ -41,7 +41,7 @@ model budget_goals {
 
 model categories {
   id                     Int                      @id @default(autoincrement())
-  name                   String                   @unique @db.VarChar(100)
+  name                   String                   @unique @db.VarChar(255)
   icon                   String?                  @db.VarChar(50)
   color                  String?                  @db.VarChar(20)
   budget_goals           budget_goals[]
@@ -74,8 +74,8 @@ model monthly_summaries {
 model recurring_transactions {
   id                  Int         @id @default(autoincrement())
   user_id             Int?
-  merchant            String      @db.VarChar(100)
-  merchant_normalized String?     @db.VarChar(100)
+  merchant            String      @db.VarChar(255)
+  merchant_normalized String?     @db.VarChar(255)
   amount              Decimal     @db.Decimal(12, 2)
   category_id         Int?
   frequency           String?     @db.VarChar(20)
@@ -113,8 +113,8 @@ model transactions {
   bank_account_id     Int?
   date                DateTime       @db.Date
   description         String?
-  merchant            String?        @db.VarChar(100)
-  merchant_normalized String?        @db.VarChar(100)
+  merchant            String?        @db.VarChar(255)
+  merchant_normalized String?        @db.VarChar(255)
   amount              Decimal        @db.Decimal(12, 2)
   type                String?        @db.VarChar(10)
   category_id         Int?

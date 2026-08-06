@@ -1,7 +1,10 @@
 ﻿import { prisma } from '@/lib/prisma'
+import { getCurrentUserId } from '@/lib/current-user'
 
 export async function GET() {
   try {
+    const userId = await getCurrentUserId()
+
     const result = await prisma.$queryRaw`
       SELECT 
         c.name as category,
@@ -11,6 +14,7 @@ export async function GET() {
       FROM transactions t
       JOIN categories c ON t.category_id = c.id
       WHERE t.type = 'debit'
+      AND t.user_id = ${userId}
       GROUP BY c.name, c.color
       ORDER BY total DESC
     `

@@ -1,7 +1,10 @@
 ﻿import { prisma } from '@/lib/prisma'
+import { getCurrentUserId } from '@/lib/current-user'
 
 export async function GET(request) {
   try {
+    const userId = await getCurrentUserId()
+
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search') || ''
     const category = searchParams.get('category') || ''
@@ -23,6 +26,8 @@ export async function GET(request) {
       JOIN categories c ON t.category_id = c.id
       LEFT JOIN bank_accounts ba ON t.bank_account_id = ba.id
       WHERE 
+        t.user_id = ${userId}
+        AND 
         (${search} = '' OR LOWER(t.merchant) LIKE LOWER(${'%' + search + '%'}))
         AND (${category} = '' OR c.name = ${category})
         AND (${type} = '' OR t.type = ${type})
