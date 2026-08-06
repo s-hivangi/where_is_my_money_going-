@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const BANKS = [
@@ -18,6 +18,7 @@ const BANKS = [
 
 export default function UploadPage() {
   const router = useRouter();
+  const fileInputRef = useRef(null);
   const [file, setFile] = useState(null);
   const [bankName, setBankName] = useState("");
   const [pdfPassword, setPdfPassword] = useState("");
@@ -45,6 +46,15 @@ export default function UploadPage() {
       setError("");
     } else {
       setError("Only PDF files are accepted");
+    }
+  }
+
+  function handleRemoveFile(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    setFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   }
 
@@ -155,7 +165,7 @@ export default function UploadPage() {
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
-        onClick={() => document.getElementById("fileInput").click()}
+        onClick={() => fileInputRef.current?.click()}
         className={`border-2 border-dashed rounded-2xl p-12 text-center transition cursor-pointer ${
           dragging
             ? "border-purple-500 bg-purple-500/10"
@@ -165,6 +175,7 @@ export default function UploadPage() {
         }`}
       >
         <input
+          ref={fileInputRef}
           id="fileInput"
           type="file"
           accept=".pdf"
@@ -184,7 +195,8 @@ export default function UploadPage() {
               <p className="text-white/30 text-xs mt-1">{(file.size / 1024).toFixed(1)} KB</p>
             </div>
             <button
-              onClick={(e) => { e.stopPropagation(); setFile(null); }}
+              type="button"
+              onClick={handleRemoveFile}
               className="text-xs text-red-400 hover:text-red-300"
             >
               Remove
