@@ -1,7 +1,31 @@
 import os
-from mistralai.client import Mistral
+from io import BytesIO
 
-def extract_text_with_mistral(file_bytes: bytes, filename: str) -> str:
+from mistralai.client import Mistral
+from pypdf import PdfReader, PdfWriter
+
+
+def _decrypt_pdf(file_bytes: bytes, password: str | None) -> bytes:
+    reader = PdfReader(BytesIO(file_bytes))
+
+    if not reader.is_encrypted:
+        return file_bytes
+
+    if not password:
+        raise ValueError("PDF is password-protected. Please enter the PDF password.")
+
+    if reader.decrypt(password) == 0:
+        raise ValueError("Incorrect PDF password.")
+
+    writer = PdfWriter()
+    for page in reader.pages:
+        writer.add_page(page)
+
+    output = BytesIO()
+    writer.write(output)
+    return output.getvalue()
+
+def extract_text_with_mistral(file_bytes: bytes, filename: str, password: str | None = None) -> str:
     api_key = os.getenv("MISTRAL_API_KEY")
     if not api_key:
         raise ValueError("MISTRAL_API_KEY is missing from your .env file.")
@@ -9,11 +33,13 @@ def extract_text_with_mistral(file_bytes: bytes, filename: str) -> str:
     client = Mistral(api_key=api_key)
     
     try:
+        decrypted_bytes = _decrypt_pdf(file_bytes, password)
+
         # Pass the raw bytes directly to Mistral's file upload
         uploaded_file = client.files.upload(
             file={
                 "file_name": filename,
-                "content": file_bytes,
+                "content": decrypted_bytes,
             },
             purpose="ocr"
         )
