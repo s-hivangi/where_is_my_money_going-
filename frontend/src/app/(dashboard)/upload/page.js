@@ -20,6 +20,7 @@ export default function UploadPage() {
   const router = useRouter();
   const [file, setFile] = useState(null);
   const [bankName, setBankName] = useState("");
+  const [pdfPassword, setPdfPassword] = useState("");
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -57,6 +58,9 @@ export default function UploadPage() {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("bankName", bankName);
+    if (pdfPassword) {
+      formData.append("pdfPassword", pdfPassword);
+    }
 
     try {
       const res = await fetch("/api/upload", {
@@ -100,7 +104,7 @@ export default function UploadPage() {
               View Dashboard
             </button>
             <button
-              onClick={() => { setResult(null); setFile(null); setBankName(""); }}
+              onClick={() => { setResult(null); setFile(null); setBankName(""); setPdfPassword(""); }}
               className="bg-white/10 hover:bg-white/20 text-white font-medium px-6 py-2.5 rounded-xl text-sm transition"
             >
               Upload Another
@@ -133,6 +137,17 @@ export default function UploadPage() {
             <option key={bank} value={bank}>{bank}</option>
           ))}
         </select>
+      </div>
+
+      <div className="mb-6">
+        <label className="text-xs text-white/50 mb-2 block">PDF Password</label>
+        <input
+          type="password"
+          value={pdfPassword}
+          onChange={(e) => setPdfPassword(e.target.value)}
+          placeholder="Leave blank if the PDF is not password-protected"
+          className="w-full bg-[#12121a] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/25 outline-none focus:border-purple-500 transition"
+        />
       </div>
 
       {/* drag and drop zone */}

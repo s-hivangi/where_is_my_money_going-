@@ -51,10 +51,13 @@ async function getCategoryId(categoryName) {
   return category.id
 }
 
-async function processWithPython(file, bankName) {
+async function processWithPython(file, bankName, pdfPassword) {
   const pythonFormData = new FormData()
   pythonFormData.append('file', file, file.name)
   pythonFormData.append('bankName', bankName)
+  if (pdfPassword) {
+    pythonFormData.append('pdfPassword', pdfPassword)
+  }
 
   const response = await fetch(`${PYTHON_API_URL.replace(/\/$/, '')}/api/upload/`, {
     method: 'POST',
@@ -87,6 +90,7 @@ export async function POST(request) {
     const formData = await request.formData()
     const file = formData.get('file')
     const bankName = formData.get('bankName')
+    const pdfPassword = formData.get('pdfPassword')
 
     if (!file) {
       return Response.json({ success: false, error: 'No file provided' }, { status: 400 })
@@ -118,7 +122,7 @@ export async function POST(request) {
     const buffer = Buffer.from(bytes)
     await writeFile(filePath, buffer)
 
-    const transactions = await processWithPython(file, bankName)
+    const transactions = await processWithPython(file, bankName, pdfPassword)
 
     let bankAccount = await prisma.bank_accounts.findFirst({
       where: { user_id: userId, bank_name: bankName }
